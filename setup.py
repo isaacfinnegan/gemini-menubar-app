@@ -13,7 +13,7 @@ OPTIONS = {
 setup(
     app=APP,
     name='Gemini Menubar',
-    version='0.0.1',
+    version='0.0.2',
     data_files=DATA_FILES,
     options={'py2app': OPTIONS},
     setup_requires=['py2app'],

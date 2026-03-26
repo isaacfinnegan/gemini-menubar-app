@@ -28,6 +28,21 @@ class GeminiMenubarApp(rumps.App):
 
         sessions = data.get('full_sessions', [])
         
+        # Determine overall app title (status dot and total count)
+        active_count = 0
+        total_count = len(sessions)
+        
+        for session in sessions:
+            if (time.time() - session.get('last_modified', 0)) < 300:
+                active_count += 1
+                
+        if total_count == 0:
+            self.title = "🤖 0"
+        elif active_count > 0:
+            self.title = f"🟢 {total_count}"
+        else:
+            self.title = f"⚪️ {total_count}"
+
         if not sessions:
             self.menu.add(rumps.MenuItem("No active sessions"))
         else:
@@ -50,9 +65,16 @@ class GeminiMenubarApp(rumps.App):
                 total_tokens = tokens.get('total', 0)
                 input_context = tokens.get('input', 0)
 
-                # Create top-level item with status, name, and workspace
-                # Use NSAttributedString for a two-line display with token info
-                title = f"{status_indicator}{name} ({workspace})"
+                # Determine if session name is just a fallback ID
+                sid = session.get('id', 'Unknown')
+                is_fallback_id = name == sid[:8]
+                
+                # Primary Title (Line 1) focuses on the workspace
+                display_name = workspace
+                if not is_fallback_id:
+                    display_name = f"{workspace} - {name}"
+                
+                title = f"{status_indicator}{display_name}"
                 subtitle = f"   Tokens: {total_tokens:,} (In: {input_context:,})"
                 full_title = f"{title}\n{subtitle}"
                 
@@ -79,6 +101,8 @@ class GeminiMenubarApp(rumps.App):
                     session_item.add(rumps.separator)
                 
                 # Add submenus
+                session_item.add(rumps.MenuItem(f"Session ID: {sid}"))
+                session_item.add(rumps.separator)
                 session_item.add(rumps.MenuItem(f"Total Tokens: {total_tokens:,}"))
                 session_item.add(rumps.MenuItem(f"Context (Input): {input_context:,}"))
                 
